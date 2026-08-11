@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<title>Fondo de Apoyo</title>
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <span class="app-title">💊 Fondo de Apoyo</span>
+    <span class="header-actions">
+      <button id="btn-theme" class="btn-theme-toggle" aria-label="Cambiar tema claro/oscuro">🌙</button>
+      <button id="btn-salir" class="btn btn-link" hidden>Salir</button>
+    </span>
+  </header>
+
+  <main id="view-container" class="view-container"></main>
+
+  <nav id="bottom-nav" class="bottom-nav" hidden>
+    <button class="nav-btn" data-nav="home">
+      <span class="nav-icon">🏠</span><span>Inicio</span>
+    </button>
+    <button class="nav-btn" data-nav="contribuciones">
+      <span class="nav-icon">📅</span><span>Aportes</span>
+    </button>
+    <button class="nav-btn" data-nav="movimientos">
+      <span class="nav-icon">📋</span><span>Resumen</span>
+    </button>
+    <button class="nav-btn" data-nav="avisos">
+      <span class="nav-icon">📢</span><span>Avisos</span>
+    </button>
+    <button class="nav-btn" data-nav="admin" hidden>
+      <span class="nav-icon">⚙️</span><span>Admin</span>
+    </button>
+    <button class="nav-btn" data-nav="acerca">
+      <span class="nav-icon">ℹ️</span><span>Acerca</span>
+    </button>
+  </nav>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
