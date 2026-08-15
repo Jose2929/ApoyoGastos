@@ -4,6 +4,7 @@ import { switchView, registerView, initNav } from "./router.js";
 import { loadSession, clearSession } from "./session.js";
 import { notifyUnreadAvisos } from "./avisoModal.js";
 import { initTheme, toggleTheme } from "./theme.js";
+import { DEFAULT_TITULO_APP } from "./constants.js";
 
 import * as loginView from "./views/login.js";
 import * as homeView from "./views/home.js";
@@ -36,7 +37,12 @@ listenAvisos((avisos) => {
   avisosLoaded = true;
   tryNotifyUnread();
 });
-listenConfig((config) => setState({ config }));
+listenConfig((config) => {
+  setState({ config });
+  const titulo = config?.tituloApp || DEFAULT_TITULO_APP;
+  document.title = titulo;
+  document.getElementById("app-title").textContent = `💊 ${titulo}`;
+});
 
 function tryNotifyUnread() {
   if (sessionUser && avisosLoaded) notifyUnreadAvisos(sessionUser);

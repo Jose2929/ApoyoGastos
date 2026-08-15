@@ -14,3 +14,5 @@ export const DEFAULT_AVISO_TEXTO =
 
 export const DEFAULT_DEPOSITO_TEXTO =
   "Acabo de depositar a la cuenta común {monto}, puedes ver el acumulado aquí";
+
+export const DEFAULT_TITULO_APP = "Gastos Médicos Chávez";

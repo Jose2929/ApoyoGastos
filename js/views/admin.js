@@ -10,7 +10,14 @@ import {
 import { renderPinpad } from "../pinpad.js";
 import { openOverlay } from "../modal.js";
 import { formatFecha, formatMoney, formatBytes, escapeHtml } from "../utils.js";
-import { ROLES, ROLE_LABELS, DEFAULT_ACERCA_TEXTO, DEFAULT_AVISO_TEXTO, DEFAULT_DEPOSITO_TEXTO } from "../constants.js";
+import {
+  ROLES,
+  ROLE_LABELS,
+  DEFAULT_ACERCA_TEXTO,
+  DEFAULT_AVISO_TEXTO,
+  DEFAULT_DEPOSITO_TEXTO,
+  DEFAULT_TITULO_APP,
+} from "../constants.js";
 
 const ACCION_LABELS = {
   login: "Inició sesión",
@@ -25,6 +32,7 @@ const ACCION_LABELS = {
   aviso_publicado: "Publicó un aviso",
   borrado_comprobantes: "Borró comprobantes antiguos",
   config_meta: "Actualizó la meta mensual",
+  config_titulo: "Actualizó el título de la app",
   config_whatsapp: "Actualizó el enlace/mensajes de WhatsApp",
   config_acerca: "Actualizó el texto de Acerca de",
   edicion_movimiento: "Corrigió un movimiento",
@@ -34,6 +42,7 @@ const MENU_ITEMS = [
   { key: "integrantes", label: "Integrantes" },
   { key: "agregar", label: "Agregar integrante" },
   { key: "comprobantes", label: "Comprobantes" },
+  { key: "titulo", label: "Título de la app" },
   { key: "enlace", label: "Enlace de la app" },
   { key: "mensajes", label: "Mensajes de WhatsApp" },
   { key: "acerca", label: "Modificar Acerca de" },
@@ -140,6 +149,7 @@ export function render(container) {
         integrantes: buildIntegrantesModal,
         agregar: buildAgregarModal,
         comprobantes: buildComprobantesModal,
+        titulo: buildTituloModal,
         enlace: buildEnlaceModal,
         mensajes: buildMensajesModal,
         acerca: buildAcercaModal,
@@ -295,6 +305,28 @@ export function render(container) {
       resultadoEl.textContent =
         bytes > 0 ? `Se liberaron ${formatBytes(bytes)}.` : "No había comprobantes tan antiguos.";
       await logAccion("borrado_comprobantes", formatBytes(bytes));
+    });
+  }
+
+  // --- Título de la app ---
+  function buildTituloModal(body) {
+    const { config } = getState();
+    body.innerHTML = `
+      <div class="field-group">
+        <label class="field-label" for="titulo-app">Título de la app</label>
+        <input class="input-text" id="titulo-app" type="text" maxlength="60" placeholder="${escapeHtml(DEFAULT_TITULO_APP)}" value="${escapeHtml(config?.tituloApp || DEFAULT_TITULO_APP)}" />
+      </div>
+      <button class="btn btn-big" id="titulo-app-guardar">Guardar título</button>
+    `;
+    body.querySelector("#titulo-app-guardar").addEventListener("click", async () => {
+      const tituloApp = body.querySelector("#titulo-app").value.trim();
+      if (!tituloApp) {
+        alert("Escribe un título.");
+        return;
+      }
+      await setConfig({ tituloApp });
+      await logAccion("config_titulo", tituloApp);
+      alert("Título guardado.");
     });
   }
 
