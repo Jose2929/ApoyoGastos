@@ -8,6 +8,7 @@ import {
   purgeComprobantesAntiguos,
 } from "../db.js";
 import { renderPinpad } from "../pinpad.js";
+import { openOverlay } from "../modal.js";
 import { formatFecha, formatMoney, formatBytes, escapeHtml } from "../utils.js";
 import { ROLES, ROLE_LABELS, DEFAULT_ACERCA_TEXTO, DEFAULT_AVISO_TEXTO, DEFAULT_DEPOSITO_TEXTO } from "../constants.js";
 
@@ -47,6 +48,7 @@ export function render(container) {
       <h1>Administración</h1>
 
       <h2 class="section-title">Meta mensual</h2>
+      <p class="field-hint">Es la cantidad total que se busca recaudar entre todos los integrantes cada mes.</p>
       <div class="inline-form">
         <input class="input-money" id="meta-input" type="number" min="0" step="0.01" value="${config?.metaMensual || ""}" placeholder="$0.00" />
         <button class="btn" id="meta-guardar">Guardar</button>
@@ -80,11 +82,11 @@ export function render(container) {
     alert("Meta mensual guardada.");
   });
 
-  // --- Modal genérico ---
+  // --- Modal genérico con header + cuerpo con scroll propio ---
   function openModal(title, build) {
-    const overlay = document.createElement("div");
-    overlay.className = "modal-overlay";
-    overlay.innerHTML = `
+    let cleanup = null;
+    const { overlay, close } = openOverlay(
+      `
       <div class="modal-card">
         <div class="modal-header">
           <h2 class="section-title" style="margin:0">${escapeHtml(title)}</h2>
@@ -92,13 +94,9 @@ export function render(container) {
         </div>
         <div class="modal-body"></div>
       </div>
-    `;
-    document.body.appendChild(overlay);
-    let cleanup = null;
-    const close = () => {
-      if (cleanup) cleanup();
-      overlay.remove();
-    };
+    `,
+      { onClose: () => cleanup && cleanup() }
+    );
     overlay.querySelector(".modal-close-btn").addEventListener("click", close);
     const body = overlay.querySelector(".modal-body");
     cleanup = build(body, close) || null;
@@ -106,21 +104,20 @@ export function render(container) {
   }
 
   function openPinCaptureModal(title, onDone) {
-    const overlay = document.createElement("div");
-    overlay.className = "modal-overlay";
-    overlay.innerHTML = `
+    const { overlay, close } = openOverlay(`
       <div class="modal-card">
-        <button type="button" class="btn btn-link" id="pin-capture-cerrar">‹ Cancelar</button>
-        <div class="pin-capture-host"></div>
+        <div class="modal-body">
+          <button type="button" class="btn btn-link" id="pin-capture-cerrar">‹ Cancelar</button>
+          <div class="pin-capture-host"></div>
+        </div>
       </div>
-    `;
-    document.body.appendChild(overlay);
-    overlay.querySelector("#pin-capture-cerrar").addEventListener("click", () => overlay.remove());
+    `);
+    overlay.querySelector("#pin-capture-cerrar").addEventListener("click", close);
     renderPinpad(overlay.querySelector(".pin-capture-host"), {
       title,
       onComplete: async (pin) => {
         await onDone(pin);
-        overlay.remove();
+        close();
       },
     });
   }
@@ -156,10 +153,11 @@ export function render(container) {
           row.innerHTML = `
             <span class="member-admin-name">${escapeHtml(m.nombre)}${m.activo === false ? " — inactivo" : ""}</span>
             <span class="member-admin-pin">PIN: ${m.pin ? escapeHtml(m.pin) : "sin PIN"}</span>
-            <select class="input-select role-select">
+            <select class="input-select role-select" aria-label="Rol de ${escapeHtml(m.nombre)}">
               ${ROLES.map((r) => `<option value="${r}" ${r === rol ? "selected" : ""}>${ROLE_LABELS[r]}</option>`).join("")}
             </select>
             ${m.debePreguntarPin ? '<span class="member-admin-pending">Pendiente: se le pedirá cambiar su PIN al entrar</span>' : ""}
+            <hr class="member-admin-divider" />
             <span class="member-admin-actions">
               <button class="btn btn-small" data-action="pin">Cambiar PIN</button>
               ${m.pin ? '<button class="btn btn-small" data-action="quitar-pin">Quitar PIN</button>' : ""}
@@ -214,8 +212,12 @@ export function render(container) {
   // --- Agregar integrante ---
   function buildAgregarModal(body) {
     body.innerHTML = `
-      <div class="inline-form"><input class="input-text" id="nuevo-nombre" type="text" placeholder="Nombre" maxlength="40" /></div>
-      <div class="inline-form">
+      <div class="field-group">
+        <label class="field-label" for="nuevo-nombre">Nombre</label>
+        <input class="input-text" id="nuevo-nombre" type="text" placeholder="Ej. María" maxlength="40" />
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="nuevo-rol">Rol</label>
         <select id="nuevo-rol" class="input-select">
           ${ROLES.map((r) => `<option value="${r}">${ROLE_LABELS[r]}</option>`).join("")}
         </select>
@@ -223,6 +225,7 @@ export function render(container) {
       <label class="checkbox-label">
         <input type="checkbox" id="nuevo-sin-pin" /> Sin PIN (entra solo tocando su nombre)
       </label>
+      <hr class="modal-divider" />
       <button class="btn btn-big" id="nuevo-agregar">Agregar integrante</button>
       <p class="foto-status" id="nuevo-status"></p>
     `;
@@ -261,14 +264,15 @@ export function render(container) {
   function buildComprobantesModal(body) {
     body.innerHTML = `
       <p class="field-hint">Borra las fotos de comprobantes antiguos para liberar espacio (el registro del movimiento se conserva, solo se quita la foto).</p>
-      <div class="inline-form">
+      <div class="field-group">
+        <label class="field-label" for="purge-meses">Antigüedad</label>
         <select id="purge-meses" class="input-select">
           <option value="3">Más de 3 meses</option>
           <option value="6" selected>Más de 6 meses</option>
           <option value="12">Más de 12 meses</option>
         </select>
-        <button class="btn" id="purge-btn">Borrar</button>
       </div>
+      <button class="btn btn-big" id="purge-btn">Borrar</button>
       <p id="purge-resultado"></p>
     `;
     body.querySelector("#purge-btn").addEventListener("click", async () => {
@@ -287,8 +291,10 @@ export function render(container) {
   function buildEnlaceModal(body) {
     const { config } = getState();
     body.innerHTML = `
-      <label class="field-label" for="wa-url">Enlace de la app</label>
-      <input class="input-text" id="wa-url" type="url" placeholder="https://tu-app.com" value="${escapeHtml(config?.appUrl || "")}" />
+      <div class="field-group">
+        <label class="field-label" for="wa-url">Enlace de la app</label>
+        <input class="input-text" id="wa-url" type="url" placeholder="https://tu-app.com" value="${escapeHtml(config?.appUrl || "")}" />
+      </div>
       <button class="btn btn-big" id="wa-url-guardar">Guardar enlace</button>
     `;
     body.querySelector("#wa-url-guardar").addEventListener("click", async () => {
@@ -303,10 +309,15 @@ export function render(container) {
   function buildMensajesModal(body) {
     const { config } = getState();
     body.innerHTML = `
-      <label class="field-label" for="wa-aviso">Mensaje al compartir un aviso</label>
-      <textarea class="input-textarea" id="wa-aviso" maxlength="300">${escapeHtml(config?.whatsappAvisoTexto || DEFAULT_AVISO_TEXTO)}</textarea>
-      <label class="field-label" for="wa-deposito">Mensaje al compartir un depósito (usa {monto} donde quieras que aparezca la cantidad)</label>
-      <textarea class="input-textarea" id="wa-deposito" maxlength="300">${escapeHtml(config?.whatsappDepositoTexto || DEFAULT_DEPOSITO_TEXTO)}</textarea>
+      <div class="field-group">
+        <label class="field-label" for="wa-aviso">Mensaje al compartir un aviso</label>
+        <textarea class="input-textarea" id="wa-aviso" maxlength="300">${escapeHtml(config?.whatsappAvisoTexto || DEFAULT_AVISO_TEXTO)}</textarea>
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="wa-deposito">Mensaje al compartir un depósito</label>
+        <p class="field-hint">Usa {monto} donde quieras que aparezca la cantidad.</p>
+        <textarea class="input-textarea" id="wa-deposito" maxlength="300">${escapeHtml(config?.whatsappDepositoTexto || DEFAULT_DEPOSITO_TEXTO)}</textarea>
+      </div>
       <button class="btn btn-big" id="wa-msg-guardar">Guardar mensajes</button>
     `;
     body.querySelector("#wa-msg-guardar").addEventListener("click", async () => {
@@ -322,8 +333,10 @@ export function render(container) {
   function buildAcercaModal(body) {
     const { config } = getState();
     body.innerHTML = `
-      <label class="field-label" for="acerca-texto">Texto que verán los integrantes</label>
-      <textarea class="input-textarea" id="acerca-texto" maxlength="1000">${escapeHtml(config?.acercaTexto || DEFAULT_ACERCA_TEXTO)}</textarea>
+      <div class="field-group">
+        <label class="field-label" for="acerca-texto">Texto que verán los integrantes</label>
+        <textarea class="input-textarea" id="acerca-texto" maxlength="1000">${escapeHtml(config?.acercaTexto || DEFAULT_ACERCA_TEXTO)}</textarea>
+      </div>
       <button class="btn btn-big" id="acerca-guardar">Guardar texto</button>
     `;
     body.querySelector("#acerca-guardar").addEventListener("click", async () => {
@@ -343,19 +356,83 @@ export function render(container) {
         body.innerHTML = '<p class="empty">Sin registros.</p>';
         return;
       }
-      body.innerHTML = '<div class="bitacora-list" id="bitacora-lista"></div>';
-      const el = body.querySelector("#bitacora-lista");
-      entries.forEach((e) => {
-        const row = document.createElement("div");
-        row.className = "bitacora-row";
-        const label = ACCION_LABELS[e.accion] || e.accion;
-        row.innerHTML = `
-          <span class="bitacora-quien">${escapeHtml(e.miembroNombre)}</span>
-          <span class="bitacora-accion">${escapeHtml(label)}${e.detalle ? " — " + escapeHtml(String(e.detalle)) : ""}</span>
-          <span class="bitacora-cuando">${formatFecha(e.fecha)}</span>
-        `;
-        el.appendChild(row);
-      });
+
+      const nombres = [...new Set(entries.map((e) => e.miembroNombre))].sort((a, b) =>
+        a.localeCompare(b, "es")
+      );
+      const accionesPresentes = [...new Set(entries.map((e) => e.accion))];
+
+      body.innerHTML = `
+        <div class="field-group">
+          <label class="field-label" for="bit-buscar">Buscar</label>
+          <input class="input-text" id="bit-buscar" type="text" placeholder="Nombre, acción o detalle..." />
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="bit-integrante">Integrante</label>
+          <select id="bit-integrante" class="input-select">
+            <option value="">Todos</option>
+            ${nombres.map((n) => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("")}
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="bit-accion">Tipo de acción</label>
+          <select id="bit-accion" class="input-select">
+            <option value="">Todas</option>
+            ${accionesPresentes
+              .map((a) => `<option value="${escapeHtml(a)}">${escapeHtml(ACCION_LABELS[a] || a)}</option>`)
+              .join("")}
+          </select>
+        </div>
+        <hr class="modal-divider" />
+        <p class="field-hint" id="bit-contador"></p>
+        <div class="bitacora-list" id="bitacora-lista"></div>
+      `;
+
+      const buscarEl = body.querySelector("#bit-buscar");
+      const integranteEl = body.querySelector("#bit-integrante");
+      const accionEl = body.querySelector("#bit-accion");
+      const listEl = body.querySelector("#bitacora-lista");
+      const contadorEl = body.querySelector("#bit-contador");
+
+      function paintList() {
+        const texto = buscarEl.value.trim().toLowerCase();
+        const integrante = integranteEl.value;
+        const accion = accionEl.value;
+
+        const filtrados = entries.filter((e) => {
+          if (integrante && e.miembroNombre !== integrante) return false;
+          if (accion && e.accion !== accion) return false;
+          if (texto) {
+            const label = ACCION_LABELS[e.accion] || e.accion;
+            const haystack = `${e.miembroNombre} ${label} ${e.detalle || ""}`.toLowerCase();
+            if (!haystack.includes(texto)) return false;
+          }
+          return true;
+        });
+
+        contadorEl.textContent = `${filtrados.length} de ${entries.length} registros`;
+        listEl.innerHTML = "";
+        if (!filtrados.length) {
+          listEl.innerHTML = '<p class="empty">Nada coincide con el filtro.</p>';
+          return;
+        }
+        filtrados.forEach((e) => {
+          const row = document.createElement("div");
+          row.className = "bitacora-row";
+          const label = ACCION_LABELS[e.accion] || e.accion;
+          row.innerHTML = `
+            <span class="bitacora-quien">${escapeHtml(e.miembroNombre)}</span>
+            <span class="bitacora-accion">${escapeHtml(label)}${e.detalle ? " — " + escapeHtml(String(e.detalle)) : ""}</span>
+            <span class="bitacora-cuando">${formatFecha(e.fecha)}</span>
+          `;
+          listEl.appendChild(row);
+        });
+      }
+
+      buscarEl.addEventListener("input", paintList);
+      integranteEl.addEventListener("change", paintList);
+      accionEl.addEventListener("change", paintList);
+      paintList();
     });
   }
 }

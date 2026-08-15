@@ -35,7 +35,9 @@ export function render(container) {
 
   function repaint() {
     const { movimientos, miembros, config } = getState();
-    const meta = config?.metaMensual || 0;
+    const metaTotal = config?.metaMensual || 0;
+    const activosCount = Object.values(miembros).filter((m) => m.activo !== false).length;
+    const meta = activosCount > 0 ? metaTotal / activosCount : 0;
 
     const meses = new Set(Object.values(movimientos).map((m) => monthKey(m.fecha)));
     meses.add(actual);
@@ -52,7 +54,7 @@ export function render(container) {
     }
 
     metaInfoEl.textContent = meta
-      ? `Meta mensual: ${formatMoney(meta)}`
+      ? `Meta total del mes: ${formatMoney(metaTotal)} · Por integrante: ${formatMoney(meta)}`
       : "El administrador aún no configura la meta mensual.";
 
     const activos = Object.entries(miembros).filter(([, m]) => m.activo !== false);

@@ -1,38 +1,52 @@
 import { getState } from "./state.js";
 import { updateMovimiento, addBitacora } from "./db.js";
+import { openOverlay } from "./modal.js";
 import { escapeHtml, formatMoney } from "./utils.js";
 
 export function openMovementEditModal(id, m) {
   const { miembros, currentUser } = getState();
-  const overlay = document.createElement("div");
-  overlay.className = "modal-overlay";
-  overlay.innerHTML = `
+
+  const { overlay, close } = openOverlay(`
     <div class="modal-card">
-      <h2 class="section-title">Corregir movimiento</h2>
-      <label class="field-label" for="edit-monto">Monto</label>
-      <input class="input-money" id="edit-monto" type="number" min="0" step="0.01" value="${m.monto}" />
-      <label class="field-label" for="edit-miembro">Quién ${m.tipo === "deposito" ? "aportó" : "gastó"}</label>
-      <select id="edit-miembro" class="input-select">
-        ${Object.entries(miembros)
-          .map(
-            ([mid, mm]) =>
-              `<option value="${mid}" ${mid === m.miembroId ? "selected" : ""}>${escapeHtml(mm.nombre)}</option>`
-          )
-          .join("")}
-      </select>
-      ${
-        m.comprobante
-          ? `<button type="button" class="btn btn-small btn-danger" id="edit-borrar-foto">Borrar imagen adjunta</button><p id="edit-foto-status" class="foto-status"></p>`
-          : ""
-      }
-      <p class="form-error" id="edit-error" hidden></p>
-      <div class="modal-actions">
-        <button type="button" class="btn btn-secondary" id="edit-cancelar">Cancelar</button>
-        <button type="button" class="btn" id="edit-guardar">Guardar cambios</button>
+      <div class="modal-header">
+        <h2 class="section-title" style="margin:0">Corregir movimiento</h2>
+        <button type="button" class="modal-close-btn" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="field-group">
+          <label class="field-label" for="edit-monto">Monto</label>
+          <input class="input-money" id="edit-monto" type="number" min="0" step="0.01" value="${m.monto}" />
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="edit-miembro">Quién ${m.tipo === "deposito" ? "aportó" : "gastó"}</label>
+          <select id="edit-miembro" class="input-select">
+            ${Object.entries(miembros)
+              .map(
+                ([mid, mm]) =>
+                  `<option value="${mid}" ${mid === m.miembroId ? "selected" : ""}>${escapeHtml(mm.nombre)}</option>`
+              )
+              .join("")}
+          </select>
+        </div>
+        ${
+          m.comprobante
+            ? `<div class="field-group">
+                 <button type="button" class="btn btn-small btn-danger" id="edit-borrar-foto">Borrar imagen adjunta</button>
+                 <p id="edit-foto-status" class="foto-status"></p>
+               </div>`
+            : ""
+        }
+        <p class="form-error" id="edit-error" hidden></p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="edit-cancelar">Cancelar</button>
+          <button type="button" class="btn" id="edit-guardar">Guardar cambios</button>
+        </div>
       </div>
     </div>
-  `;
-  document.body.appendChild(overlay);
+  `);
+
+  overlay.querySelector(".modal-close-btn").addEventListener("click", close);
+  overlay.querySelector("#edit-cancelar").addEventListener("click", close);
 
   let borrarFoto = false;
   const borrarBtn = overlay.querySelector("#edit-borrar-foto");
@@ -43,8 +57,6 @@ export function openMovementEditModal(id, m) {
       borrarBtn.disabled = true;
     });
   }
-
-  overlay.querySelector("#edit-cancelar").addEventListener("click", () => overlay.remove());
 
   overlay.querySelector("#edit-guardar").addEventListener("click", async () => {
     const errorEl = overlay.querySelector("#edit-error");
@@ -72,7 +84,7 @@ export function openMovementEditModal(id, m) {
         detalle: `${m.miembroNombre} ${formatMoney(m.monto)} → ${nuevoMiembroNombre} ${formatMoney(monto)}`,
         fecha: Date.now(),
       });
-      overlay.remove();
+      close();
     } catch (e) {
       errorEl.textContent = "No se pudo guardar. Intenta de nuevo.";
       errorEl.hidden = false;
