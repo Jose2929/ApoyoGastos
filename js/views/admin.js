@@ -41,18 +41,20 @@ const MENU_ITEMS = [
 ];
 
 export function render(container) {
-  const { currentUser, config } = getState();
+  const { currentUser, config, miembros } = getState();
+  const activosCount = Object.values(miembros).filter((m) => m.activo !== false).length;
 
   container.innerHTML = `
     <div class="list-screen">
       <h1>Administración</h1>
 
       <h2 class="section-title">Meta mensual</h2>
-      <p class="field-hint">Es la cantidad total que se busca recaudar entre todos los integrantes cada mes.</p>
+      <p class="field-hint">Hay ${activosCount} integrante${activosCount === 1 ? "" : "s"} activo${activosCount === 1 ? "" : "s"}. Define cuánto se espera que aporte cada uno al mes.</p>
       <div class="inline-form">
-        <input class="input-money" id="meta-input" type="number" min="0" step="0.01" value="${config?.metaMensual || ""}" placeholder="$0.00" />
+        <input class="input-money" id="meta-input" type="number" min="0" step="0.01" value="${config?.metaPorIntegrante || ""}" placeholder="$0.00" />
         <button class="btn" id="meta-guardar">Guardar</button>
       </div>
+      <p class="field-hint" id="meta-total-preview"></p>
 
       <h2 class="section-title">Configuración</h2>
       <div class="admin-menu-list">
@@ -71,13 +73,22 @@ export function render(container) {
     });
   }
 
+  const metaInput = container.querySelector("#meta-input");
+  const metaTotalPreview = container.querySelector("#meta-total-preview");
+  function actualizarMetaTotalPreview() {
+    const val = parseFloat(metaInput.value) || 0;
+    metaTotalPreview.textContent = `Meta mensual total: ${formatMoney(val * activosCount)}`;
+  }
+  metaInput.addEventListener("input", actualizarMetaTotalPreview);
+  actualizarMetaTotalPreview();
+
   container.querySelector("#meta-guardar").addEventListener("click", async () => {
-    const val = parseFloat(container.querySelector("#meta-input").value);
+    const val = parseFloat(metaInput.value);
     if (!val || val <= 0) {
       alert("Ingresa una meta válida.");
       return;
     }
-    await setConfig({ metaMensual: val });
+    await setConfig({ metaPorIntegrante: val });
     await logAccion("config_meta", formatMoney(val));
     alert("Meta mensual guardada.");
   });

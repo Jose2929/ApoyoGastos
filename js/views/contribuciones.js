@@ -1,5 +1,5 @@
 import { getState, subscribe } from "../state.js";
-import { formatMoney, monthKey, monthLabel, escapeHtml } from "../utils.js";
+import { formatMoney, monthKey, monthLabel, escapeHtml, sumaDepositosMes } from "../utils.js";
 
 const LABELS = {
   al_corriente: "Al corriente",
@@ -8,20 +8,22 @@ const LABELS = {
   sin_meta: "Sin meta configurada",
 };
 
-export function render(container) {
+const ESTADO_ORDEN = { extra: 0, al_corriente: 1, falta: 2, sin_meta: 3 };
+
+export function render(container, { filtro = "todos" } = {}) {
   const actual = monthKey(Date.now());
   let mesSel = actual;
-  let filtroEstado = "todos";
+  let filtroEstado = filtro;
 
   container.innerHTML = `
     <div class="list-screen">
       <h1>Contribuciones</h1>
       <select id="mes-select" class="input-select"></select>
       <div class="filter-pills" id="filtro-estado">
-        <button class="pill selected" data-v="todos">Todos</button>
-        <button class="pill" data-v="al_corriente">Al corriente</button>
-        <button class="pill" data-v="falta">Faltan por aportar</button>
-        <button class="pill" data-v="extra">Aportaron de más</button>
+        <button class="pill ${filtroEstado === "todos" ? "selected" : ""}" data-v="todos">Todos</button>
+        <button class="pill ${filtroEstado === "al_corriente" ? "selected" : ""}" data-v="al_corriente">Al corriente</button>
+        <button class="pill ${filtroEstado === "falta" ? "selected" : ""}" data-v="falta">Faltan por aportar</button>
+        <button class="pill ${filtroEstado === "extra" ? "selected" : ""}" data-v="extra">Aportaron de más</button>
       </div>
       <p class="meta-info" id="meta-info"></p>
       <div class="member-status-list" id="lista"></div>
@@ -35,9 +37,9 @@ export function render(container) {
 
   function repaint() {
     const { movimientos, miembros, config } = getState();
-    const metaTotal = config?.metaMensual || 0;
+    const meta = config?.metaPorIntegrante || 0;
     const activosCount = Object.values(miembros).filter((m) => m.activo !== false).length;
-    const meta = activosCount > 0 ? metaTotal / activosCount : 0;
+    const metaTotal = meta * activosCount;
 
     const meses = new Set(Object.values(movimientos).map((m) => monthKey(m.fecha)));
     meses.add(actual);
@@ -59,9 +61,7 @@ export function render(container) {
 
     const activos = Object.entries(miembros).filter(([, m]) => m.activo !== false);
     let items = activos.map(([id, m]) => {
-      const suma = Object.values(movimientos)
-        .filter((mv) => mv.tipo === "deposito" && mv.miembroId === id && monthKey(mv.fecha) === mesSel)
-        .reduce((a, mv) => a + mv.monto, 0);
+      const suma = sumaDepositosMes(movimientos, id, mesSel);
       let estado;
       if (!meta) estado = "sin_meta";
       else if (suma > meta) estado = "extra";
@@ -71,7 +71,10 @@ export function render(container) {
     });
 
     if (filtroEstado !== "todos") items = items.filter((i) => i.estado === filtroEstado);
-    items.sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+    items.sort((a, b) => {
+      const diff = ESTADO_ORDEN[a.estado] - ESTADO_ORDEN[b.estado];
+      return diff !== 0 ? diff : a.nombre.localeCompare(b.nombre, "es");
+    });
 
     listaEl.innerHTML = "";
     if (!items.length) {

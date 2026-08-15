@@ -13,21 +13,37 @@ const CATEGORIAS = ["Medicinas", "Consulta", "Estudios", "Otro"];
 
 export function render(container, { tipo }) {
   const isDeposito = tipo === "deposito";
-  const { currentUser } = getState();
+  const { currentUser, config } = getState();
 
   if (!isDeposito && currentUser.rol !== "admin" && currentUser.rol !== "gestor") {
     switchView("home");
     return;
   }
 
+  const metaPorIntegrante = config?.metaPorIntegrante || 0;
+  const mostrarChips = isDeposito && metaPorIntegrante > 0;
+  const chipMas = metaPorIntegrante + 100;
+  const chipMenos = metaPorIntegrante - 100;
+  const mostrarChipMenos = chipMenos > 0;
+
   container.innerHTML = `
     <div class="form-screen">
-      <button class="btn btn-link" id="btn-cancelar">‹ Cancelar</button>
       <h1>${isDeposito ? "Registrar depósito" : "Registrar gasto"}</h1>
-      <p class="quien-info">${isDeposito ? "Depositando" : "Registrando gasto"} a nombre de: <strong>${escapeHtml(currentUser.nombre)}</strong></p>
+      ${isDeposito ? `<p class="quien-info">Depositando a nombre de: <strong>${escapeHtml(currentUser.nombre)}</strong></p>` : ""}
 
-      <label class="field-label" for="monto">Monto</label>
-      <input class="input-money" id="monto" type="number" inputmode="decimal" min="0" step="0.01" placeholder="$0.00" />
+      <label class="field-label" ${mostrarChips ? "" : 'for="monto"'}>Monto</label>
+      ${
+        mostrarChips
+          ? `
+        <div class="filter-pills" id="monto-chips">
+          <button type="button" class="pill chip-monto selected" data-monto="${metaPorIntegrante}">${formatMoney(metaPorIntegrante)}</button>
+          <button type="button" class="pill chip-monto" data-monto="${chipMas}">${formatMoney(chipMas)}</button>
+          ${mostrarChipMenos ? `<button type="button" class="pill chip-monto" data-monto="${chipMenos}">${formatMoney(chipMenos)}</button>` : ""}
+          <button type="button" class="pill chip-monto" data-monto="otro">Otro</button>
+        </div>`
+          : ""
+      }
+      <input class="input-money" id="monto" type="number" inputmode="decimal" min="0" step="0.01" placeholder="$0.00" ${mostrarChips ? "hidden" : ""} value="${mostrarChips ? metaPorIntegrante : ""}" />
 
       ${
         !isDeposito
@@ -52,11 +68,31 @@ export function render(container, { tipo }) {
       <p class="foto-status" id="foto-status"></p>
 
       <p class="form-error" id="form-error" hidden></p>
-      <button class="btn btn-big ${isDeposito ? "btn-deposit" : "btn-expense"}" id="btn-guardar">Guardar</button>
+      <button class="btn btn-big btn-deposit" id="btn-guardar">Guardar</button>
+      <button class="btn btn-big btn-danger" id="btn-cancelar">Cancelar</button>
     </div>
   `;
 
   container.querySelector("#btn-cancelar").addEventListener("click", () => switchView("home"));
+
+  if (mostrarChips) {
+    const chipsWrap = container.querySelector("#monto-chips");
+    const montoInput = container.querySelector("#monto");
+    chipsWrap.querySelectorAll(".chip-monto").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        chipsWrap.querySelectorAll(".chip-monto").forEach((c) => c.classList.remove("selected"));
+        chip.classList.add("selected");
+        if (chip.dataset.monto === "otro") {
+          montoInput.hidden = false;
+          montoInput.value = "";
+          montoInput.focus();
+        } else {
+          montoInput.hidden = true;
+          montoInput.value = chip.dataset.monto;
+        }
+      });
+    });
+  }
 
   let categoriaSel = null;
   if (!isDeposito) {
@@ -176,7 +212,7 @@ export function render(container, { tipo }) {
 }
 
 function calcularExcedente(movimientosPrevios, config, miembroId, nuevoMov) {
-  const meta = config?.metaMensual || 0;
+  const meta = config?.metaPorIntegrante || 0;
   if (!meta) return 0;
   const fechaNueva = new Date(nuevoMov.fecha);
   const y = fechaNueva.getFullYear();

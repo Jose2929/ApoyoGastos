@@ -3,11 +3,11 @@ import { monthKey, monthLabel } from "../utils.js";
 import { movementRow } from "../components.js";
 import { openMovementEditModal } from "../movementEdit.js";
 
-export function render(container, { simple = false } = {}) {
+export function render(container, { simple = false, tipo = "todo" } = {}) {
   const { miembros, currentUser } = getState();
   const isAdmin = currentUser?.rol === "admin";
 
-  let filtroTipo = "todo";
+  let filtroTipo = tipo;
   let filtroIntegrante = "todos";
   let filtroMes = "todos";
 
@@ -15,9 +15,9 @@ export function render(container, { simple = false } = {}) {
     <div class="list-screen">
       <h1>${simple ? "Historial" : "Resumen general"}</h1>
       <div class="filter-pills" id="filtro-tipo">
-        <button class="pill selected" data-v="todo">Todo</button>
-        <button class="pill" data-v="deposito">Depósitos</button>
-        <button class="pill" data-v="gasto">Gastos</button>
+        <button class="pill ${filtroTipo === "todo" ? "selected" : ""}" data-v="todo">Todo</button>
+        <button class="pill ${filtroTipo === "deposito" ? "selected" : ""}" data-v="deposito">Depósitos</button>
+        <button class="pill ${filtroTipo === "gasto" ? "selected" : ""}" data-v="gasto">Gastos</button>
       </div>
       ${
         !simple

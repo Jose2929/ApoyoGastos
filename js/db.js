@@ -21,7 +21,7 @@ export function listenAvisos(cb) {
 }
 
 export function listenConfig(cb) {
-  onValue(ref(db, `${ROOT}/config`), (snap) => cb(snap.val() || { metaMensual: 0 }));
+  onValue(ref(db, `${ROOT}/config`), (snap) => cb(snap.val() || { metaPorIntegrante: 0 }));
 }
 
 export async function loadBitacora() {

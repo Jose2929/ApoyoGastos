@@ -38,6 +38,14 @@ export function monthKey(millis) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+export function sumaDepositosMes(movimientos, miembroId, mesKey) {
+  return Object.values(movimientos).reduce(
+    (acc, mv) =>
+      acc + (mv.tipo === "deposito" && mv.miembroId === miembroId && monthKey(mv.fecha) === mesKey ? mv.monto : 0),
+    0
+  );
+}
+
 export function monthLabel(key) {
   const [y, m] = key.split("-").map(Number);
   return new Date(y, m - 1, 1).toLocaleDateString("es-MX", {

@@ -3,7 +3,7 @@ const state = {
   miembros: {},
   movimientos: {},
   avisos: {},
-  config: { metaMensual: 0 },
+  config: { metaPorIntegrante: 0 },
 };
 
 const listeners = new Set();

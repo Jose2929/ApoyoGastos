@@ -9,25 +9,19 @@ const LAST_USER_KEY = "apoyoGastos_lastUser";
 export function render(container) {
   container.innerHTML = `
     <div class="login-screen">
-      <h1>Fondo de Apoyo</h1>
-      <p class="subtitle">Elige tu nombre para entrar</p>
-      <input type="search" id="buscador-nombre" class="input-text login-search" placeholder="Buscar tu nombre..." />
+      <p class="subtitle" id="login-subtitle">Busca tu nombre para acceder</p>
       <div class="member-list"></div>
       <div class="pin-area" hidden></div>
     </div>
   `;
 
-  const buscador = container.querySelector("#buscador-nombre");
+  const subtitle = container.querySelector("#login-subtitle");
   const list = container.querySelector(".member-list");
   const pinArea = container.querySelector(".pin-area");
 
   function paintList() {
     const { miembros } = getState();
     let activos = Object.entries(miembros).filter(([, m]) => m.activo !== false);
-    const query = (buscador.value || "").trim().toLowerCase();
-    if (query) {
-      activos = activos.filter(([, m]) => m.nombre.toLowerCase().includes(query));
-    }
 
     const lastId = localStorage.getItem(LAST_USER_KEY);
     activos.sort((a, b) => {
@@ -38,16 +32,19 @@ export function render(container) {
 
     list.innerHTML = "";
     if (!activos.length) {
-      list.innerHTML = query
-        ? '<p class="empty">No se encontró ningún integrante con ese nombre.</p>'
-        : '<p class="empty">Todavía no hay integrantes registrados. Pide al administrador que te agregue.</p>';
+      list.innerHTML = '<p class="empty">Todavía no hay integrantes registrados. Pide al administrador que te agregue.</p>';
       return;
     }
 
     activos.forEach(([id, m]) => {
       const btn = document.createElement("button");
       btn.className = "btn btn-big member-btn";
-      btn.textContent = m.nombre;
+      if (id === lastId) {
+        btn.classList.add("member-btn-last");
+        btn.innerHTML = `<span class="member-star" aria-hidden="true">⭐</span>${escapeHtml(m.nombre)}`;
+      } else {
+        btn.textContent = m.nombre;
+      }
       btn.addEventListener("click", () => {
         if (!m.pin) {
           completeLogin(id, m);
@@ -59,24 +56,11 @@ export function render(container) {
     });
   }
 
-  buscador.addEventListener("input", paintList);
-
   function openPin(id, m) {
     list.hidden = true;
-    buscador.hidden = true;
     pinArea.hidden = false;
     pinArea.innerHTML = "";
-
-    const back = document.createElement("button");
-    back.className = "btn btn-link";
-    back.textContent = "‹ Elegir otro integrante";
-    back.addEventListener("click", () => {
-      pinArea.hidden = true;
-      pinArea.innerHTML = "";
-      list.hidden = false;
-      buscador.hidden = false;
-    });
-    pinArea.appendChild(back);
+    subtitle.textContent = `Bienvenid@ de vuelta, ${m.nombre}`;
 
     const pinHost = document.createElement("div");
     pinArea.appendChild(pinHost);
@@ -95,6 +79,17 @@ export function render(container) {
         }
       },
     });
+
+    const back = document.createElement("button");
+    back.className = "btn btn-big btn-secondary";
+    back.textContent = "Soy otra persona";
+    back.addEventListener("click", () => {
+      pinArea.hidden = true;
+      pinArea.innerHTML = "";
+      list.hidden = false;
+      subtitle.textContent = "Busca tu nombre para acceder";
+    });
+    pinArea.appendChild(back);
   }
 
   function showCambiarPinPrompt(id, m) {

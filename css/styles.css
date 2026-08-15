@@ -297,18 +297,9 @@ a.btn {
   text-align: center;
 }
 
-.login-screen h1 {
-  margin-top: 0.6em;
-}
-
 .subtitle {
   color: var(--color-text-muted);
   margin-bottom: 1.2em;
-}
-
-.login-search {
-  margin-bottom: 0.8em;
-  text-align: left;
 }
 
 .member-list {
@@ -321,8 +312,17 @@ a.btn {
   background: var(--color-surface);
   color: var(--color-text);
   border: 2px solid var(--color-border);
-  font-size: 1.2rem;
-  min-height: 60px;
+  font-size: 1.4rem;
+  min-height: 72px;
+}
+
+.member-btn-last {
+  border-color: var(--color-extra);
+  background: var(--color-extra-bg);
+}
+
+.member-star {
+  margin-right: 0.4em;
 }
 
 .pin-area {
@@ -459,6 +459,38 @@ a.btn {
 
 .stat-amount.stat-ok {
   color: var(--color-deposit);
+}
+
+button.stat-card {
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  width: 100%;
+  margin: 0;
+}
+
+.alert-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  width: 100%;
+  text-align: left;
+  background: var(--color-expense-bg);
+  border: none;
+  border-left: 6px solid var(--color-expense);
+  border-radius: var(--radius);
+  padding: 0.9em 1em;
+  color: var(--color-expense);
+  font-weight: 700;
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 0.8em;
+}
+
+.alert-banner .alert-icon {
+  font-size: 1.3rem;
+  flex: 0 0 auto;
 }
 
 .action-buttons {
@@ -772,6 +804,17 @@ select.input-select {
   border-radius: var(--radius);
   padding: 0.9em 1em;
   border-left: 6px solid var(--color-primary);
+}
+
+button.aviso-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: var(--color-text);
+  border: none;
+  border-left: 6px solid var(--color-primary);
+  cursor: pointer;
 }
 
 .aviso-texto {

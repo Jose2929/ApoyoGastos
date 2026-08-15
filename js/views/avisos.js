@@ -7,7 +7,7 @@ import {
   buildAvisoMensaje,
   compressImageToBase64,
 } from "../utils.js";
-import { openImageViewer } from "../modal.js";
+import { openAvisoModal } from "../avisoModal.js";
 
 const AVISO_IMAGEN_OPTS = { maxDim: 1400, targetBytes: 250000 };
 
@@ -53,18 +53,15 @@ export function render(container) {
       return;
     }
     lista.forEach((a) => {
-      const el = document.createElement("div");
+      const el = document.createElement("button");
+      el.type = "button";
       el.className = "aviso-card";
       el.innerHTML = `
         <p class="aviso-texto">${escapeHtml(a.texto)}</p>
         ${a.imagen ? '<img class="aviso-thumb" src="' + a.imagen + '" alt="Imagen del aviso" />' : ""}
         <p class="aviso-meta">${escapeHtml(a.autorNombre)} · ${formatFecha(a.fecha)}</p>
       `;
-      if (a.imagen) {
-        el.querySelector(".aviso-thumb").addEventListener("click", () => {
-          openImageViewer(a.imagen, `aviso-${a.fecha}.jpg`);
-        });
-      }
+      el.addEventListener("click", () => openAvisoModal(a));
       listaEl.appendChild(el);
     });
   }
