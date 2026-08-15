@@ -23,12 +23,12 @@ const ACCION_LABELS = {
   login: "Inició sesión",
   deposito: "Registró depósito",
   gasto: "Registró gasto",
-  cambio_pin: "Cambió el PIN de",
-  quitar_pin: "Quitó el PIN de",
+  cambio_pin: "Cambió el PIN",
+  quitar_pin: "Quitó el PIN",
   cambio_rol: "Cambió el rol de",
-  reset_pregunta_pin: "Pidió que confirmara su PIN a",
-  alta_integrante: "Dio de alta a",
-  baja_integrante: "Dio de baja a",
+  reset_pregunta_pin: "Pidió que confirmara su PIN",
+  alta_integrante: "Dio de alta",
+  baja_integrante: "Dio de baja",
   aviso_publicado: "Publicó un aviso",
   borrado_comprobantes: "Borró comprobantes antiguos",
   config_meta: "Actualizó la meta mensual",
@@ -41,12 +41,12 @@ const ACCION_LABELS = {
 const MENU_ITEMS = [
   { key: "integrantes", label: "Integrantes" },
   { key: "agregar", label: "Agregar integrante" },
-  { key: "comprobantes", label: "Comprobantes" },
+  { key: "comprobantes", label: "Borrar fotos antiguas" },
   { key: "titulo", label: "Título de la app" },
   { key: "enlace", label: "Enlace de la app" },
   { key: "mensajes", label: "Mensajes de WhatsApp" },
   { key: "acerca", label: "Modificar Acerca de" },
-  { key: "bitacora", label: "Bitácora" },
+  { key: "bitacora", label: "Historial" },
 ];
 
 export function render(container) {
@@ -219,6 +219,7 @@ export function render(container) {
 
           row.querySelector('[data-action="toggle"]').addEventListener("click", async () => {
             const nuevoEstado = m.activo === false;
+            if (!nuevoEstado && !confirm(`¿Dar de baja a ${m.nombre}? Ya no podrá iniciar sesión hasta que lo des de alta de nuevo.`)) return;
             await updateMiembro(id, { activo: nuevoEstado });
             await logAccion(nuevoEstado ? "alta_integrante" : "baja_integrante", m.nombre);
           });

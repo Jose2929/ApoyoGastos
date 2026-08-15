@@ -1,4 +1,5 @@
 import { escapeHtml } from "./utils.js";
+import { pushModal, popModal } from "./backGuard.js";
 
 let openCount = 0;
 let savedScrollY = 0;
@@ -37,6 +38,7 @@ export function openOverlay(cardHtml, { onClose } = {}) {
     if (closed) return;
     closed = true;
     document.removeEventListener("keydown", onKeydown);
+    popModal(close);
     unlockScroll();
     overlay.remove();
     if (onClose) onClose();
@@ -50,6 +52,8 @@ export function openOverlay(cardHtml, { onClose } = {}) {
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) close();
   });
+
+  pushModal(close);
 
   return { overlay, close };
 }

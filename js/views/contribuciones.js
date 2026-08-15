@@ -2,7 +2,7 @@ import { getState, subscribe } from "../state.js";
 import { formatMoney, monthKey, monthLabel, escapeHtml, sumaDepositosMes } from "../utils.js";
 
 const LABELS = {
-  al_corriente: "Al corriente",
+  al_corriente: "Ya aportó",
   falta: "Falta por aportar",
   extra: "Aportó de más",
   sin_meta: "Sin meta configurada",
@@ -21,7 +21,7 @@ export function render(container, { filtro = "todos" } = {}) {
       <select id="mes-select" class="input-select"></select>
       <div class="filter-pills" id="filtro-estado">
         <button class="pill ${filtroEstado === "todos" ? "selected" : ""}" data-v="todos">Todos</button>
-        <button class="pill ${filtroEstado === "al_corriente" ? "selected" : ""}" data-v="al_corriente">Al corriente</button>
+        <button class="pill ${filtroEstado === "al_corriente" ? "selected" : ""}" data-v="al_corriente">Ya aportaron</button>
         <button class="pill ${filtroEstado === "falta" ? "selected" : ""}" data-v="falta">Faltan por aportar</button>
         <button class="pill ${filtroEstado === "extra" ? "selected" : ""}" data-v="extra">Aportaron de más</button>
       </div>
@@ -57,7 +57,7 @@ export function render(container, { filtro = "todos" } = {}) {
 
     metaInfoEl.textContent = meta
       ? `Meta total del mes: ${formatMoney(metaTotal)} · Por integrante: ${formatMoney(meta)}`
-      : "El administrador aún no configura la meta mensual.";
+      : "Aún no hay una meta para este mes.";
 
     const activos = Object.entries(miembros).filter(([, m]) => m.activo !== false);
     let items = activos.map(([id, m]) => {

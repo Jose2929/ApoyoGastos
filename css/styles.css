@@ -15,6 +15,7 @@
   --color-extra-bg: #fdf3d9;
   --color-whatsapp: #1fa855;
   --color-danger-bg: #fdeaea;
+  --color-section-bg: #e9edf4;
   --radius: 14px;
   font-size: 18px;
 }
@@ -37,6 +38,7 @@
     --color-extra-bg: #3a2f16;
     --color-whatsapp: #33c46a;
     --color-danger-bg: #3a1e1e;
+    --color-section-bg: #161c26;
   }
 }
 
@@ -57,6 +59,11 @@
   --color-extra-bg: #3a2f16;
   --color-whatsapp: #33c46a;
   --color-danger-bg: #3a1e1e;
+  --color-section-bg: #161c26;
+}
+
+:root[data-font-size="large"] {
+  font-size: 24px;
 }
 
 * {
@@ -83,6 +90,7 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
+  overscroll-behavior-y: none;
 }
 
 body {
@@ -136,12 +144,17 @@ p {
 .app-title {
   font-size: 1.15rem;
   font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
   gap: 0.6em;
+  flex-shrink: 0;
 }
 
 .btn-theme-toggle {
@@ -150,6 +163,19 @@ p {
   font-size: 1.3rem;
   min-width: 44px;
   min-height: 44px;
+  cursor: pointer;
+  color: #fff;
+}
+
+.btn-font-size-toggle {
+  background: rgba(255, 255, 255, 0.18);
+  border: none;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 1rem;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 0.5em;
   cursor: pointer;
   color: #fff;
 }
@@ -212,7 +238,7 @@ p {
   border-radius: var(--radius);
   border: none;
   padding: 0.8em 1.2em;
-  min-height: 44px;
+  min-height: 48px;
   cursor: pointer;
   background: var(--color-primary);
   color: #fff;
@@ -252,7 +278,7 @@ a.btn {
 .btn-small {
   font-size: 0.85rem;
   padding: 0.5em 0.8em;
-  min-height: 40px;
+  min-height: 44px;
 }
 
 .btn-link {
@@ -287,8 +313,8 @@ a.btn {
   background: none;
   border: none;
   font-size: 1.1rem;
-  min-width: 40px;
-  min-height: 40px;
+  min-width: 44px;
+  min-height: 44px;
   cursor: pointer;
 }
 
@@ -403,6 +429,21 @@ a.btn {
   margin-top: 0;
 }
 
+.home-section {
+  border-radius: var(--radius);
+  padding: 1em;
+  margin-bottom: 1em;
+}
+
+.home-section-shaded {
+  background: var(--color-section-bg);
+}
+
+.home-section > .section-title:first-child,
+.home-section > .section-subtitle:first-child {
+  margin-top: 0;
+}
+
 .total-card {
   background: var(--color-surface);
   border-radius: var(--radius);
@@ -436,6 +477,7 @@ a.btn {
   background: var(--color-surface);
   border-radius: var(--radius);
   padding: 0.8em;
+  min-height: 56px;
   text-align: center;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
@@ -692,7 +734,7 @@ button.stat-card {
   border-radius: 999px;
   padding: 0.5em 1em;
   font-weight: 600;
-  min-height: 40px;
+  min-height: 44px;
 }
 
 .pill.selected {

@@ -9,35 +9,43 @@ export function render(container) {
   container.innerHTML = `
     <div class="home-screen">
       <p class="hello" id="hello"></p>
-      <div class="total-card">
-        <span class="total-label">Total en la cuenta común</span>
-        <span class="total-amount" id="total-amount"></span>
-      </div>
-      <p class="field-hint">Este monto es dinero real y disponible en la cuenta común ahora mismo.</p>
 
-      <div class="action-buttons ${puedeGasto ? "" : "single"}">
-        <button class="btn btn-big btn-deposit" id="btn-deposito">+ Depósito</button>
-        ${puedeGasto ? '<button class="btn btn-big btn-expense" id="btn-gasto">− Gasto</button>' : ""}
+      <div class="home-section home-section-shaded">
+        <div class="total-card">
+          <span class="total-label">Total en la cuenta común</span>
+          <span class="total-amount" id="total-amount"></span>
+        </div>
+        <p class="field-hint">Este monto es dinero real y disponible en la cuenta común ahora mismo.</p>
+
+        <div class="action-buttons ${puedeGasto ? "" : "single"}">
+          <button class="btn btn-big btn-deposit" id="btn-deposito">+ Depósito</button>
+          ${puedeGasto ? '<button class="btn btn-big btn-expense" id="btn-gasto">− Gasto</button>' : ""}
+        </div>
       </div>
 
-      <h2 class="section-title">Meta del mes</h2>
-      <div class="stats-row" id="stats-row" hidden></div>
-      <p class="field-hint" id="meta-hint" hidden></p>
-      <div class="stats-row cols-3" id="stats-row-aportes" hidden></div>
-
-      <h2 class="section-title">Movimientos</h2>
-      <div class="stats-row">
-        <button type="button" class="stat-card" id="stat-depositos">
-          <span class="stat-label">Depósitos</span>
-          <span class="stat-amount amount-deposit" id="total-depositos"></span>
-        </button>
-        <button type="button" class="stat-card" id="stat-gastos">
-          <span class="stat-label">Gastos</span>
-          <span class="stat-amount amount-expense" id="total-gastos"></span>
-        </button>
+      <div class="home-section">
+        <h2 class="section-title">Meta del mes</h2>
+        <div class="stats-row" id="stats-row" hidden></div>
+        <p class="field-hint" id="meta-hint" hidden></p>
+        <h3 class="section-subtitle" id="aportes-subtitle" hidden>¿Quién ya aportó?</h3>
+        <div class="stats-row cols-3" id="stats-row-aportes" hidden></div>
       </div>
-      <p class="field-hint">Estos son los movimientos reales del fondo: lo que se ha aportado menos lo que se ha gastado. El saldo puede variar — a veces alcanza justo, a veces sobra, según cuánto se haya aportado y gastado hasta ahora.</p>
-      <button class="btn btn-secondary" id="btn-ver-movimientos">Ver movimientos</button>
+
+      <div class="home-section home-section-shaded">
+        <h2 class="section-title">Movimientos</h2>
+        <div class="stats-row">
+          <button type="button" class="stat-card" id="stat-depositos">
+            <span class="stat-label">Depósitos</span>
+            <span class="stat-amount amount-deposit" id="total-depositos"></span>
+          </button>
+          <button type="button" class="stat-card" id="stat-gastos">
+            <span class="stat-label">Gastos</span>
+            <span class="stat-amount amount-expense" id="total-gastos"></span>
+          </button>
+        </div>
+        <p class="field-hint">Esto es lo que en verdad ha entrado y salido del fondo. El total cambia según cuánto se aporte y se gaste.</p>
+        <button class="btn btn-secondary" id="btn-ver-movimientos">Ver movimientos</button>
+      </div>
     </div>
   `;
 
@@ -72,6 +80,7 @@ export function render(container) {
 
     const statsRow = container.querySelector("#stats-row");
     const metaHint = container.querySelector("#meta-hint");
+    const aportesSubtitle = container.querySelector("#aportes-subtitle");
     const statsRowAportes = container.querySelector("#stats-row-aportes");
     const metaPorIntegrante = config?.metaPorIntegrante || 0;
     const activos = Object.entries(miembros).filter(([, m]) => m.activo !== false);
@@ -94,7 +103,7 @@ export function render(container) {
         <div class="stat-card">
           <span class="stat-label">Faltante</span>
           <span class="stat-amount ${faltante > 0 ? "stat-warn" : "stat-ok"}">${
-        faltante > 0 ? formatMoney(faltante) : "¡Completa! 🎉"
+        faltante > 0 ? `⏳ ${formatMoney(faltante)}` : "¡Completa! 🎉"
       }</span>
         </div>
       `;
@@ -113,6 +122,7 @@ export function render(container) {
         else faltaCount++;
       });
 
+      aportesSubtitle.hidden = false;
       statsRowAportes.hidden = false;
       statsRowAportes.innerHTML = `
         <button type="button" class="stat-card" id="stat-falta">
@@ -141,6 +151,7 @@ export function render(container) {
       statsRow.hidden = true;
       statsRow.innerHTML = "";
       metaHint.hidden = true;
+      aportesSubtitle.hidden = true;
       statsRowAportes.hidden = true;
       statsRowAportes.innerHTML = "";
     }

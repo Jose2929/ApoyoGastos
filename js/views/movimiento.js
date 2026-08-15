@@ -1,6 +1,6 @@
 import { getState } from "../state.js";
 import { addMovimiento, addBitacora } from "../db.js";
-import { switchView } from "../router.js";
+import { switchView, goBackView } from "../router.js";
 import {
   compressImageToBase64,
   formatMoney,
@@ -16,7 +16,7 @@ export function render(container, { tipo }) {
   const { currentUser, config } = getState();
 
   if (!isDeposito && currentUser.rol !== "admin" && currentUser.rol !== "gestor") {
-    switchView("home");
+    switchView("home", {}, { replace: true });
     return;
   }
 
@@ -73,7 +73,9 @@ export function render(container, { tipo }) {
     </div>
   `;
 
-  container.querySelector("#btn-cancelar").addEventListener("click", () => switchView("home"));
+  container.querySelector("#btn-cancelar").addEventListener("click", () => {
+    if (!goBackView()) switchView("home");
+  });
 
   if (mostrarChips) {
     const chipsWrap = container.querySelector("#monto-chips");
@@ -180,7 +182,7 @@ export function render(container, { tipo }) {
         const excedente = calcularExcedente(movimientos, config, currentUser.id, data);
         showSuccessDeposito(monto, excedente, config);
       } else {
-        switchView("home");
+        switchView("home", {}, { replace: true });
       }
     } catch (e) {
       showError("No se pudo guardar. Revisa tu conexión e intenta de nuevo.");
@@ -207,7 +209,9 @@ export function render(container, { tipo }) {
       const mensaje = buildDepositoMensaje(config, formatMoney(monto));
       window.open(buildWhatsappUrl(mensaje), "_blank");
     });
-    container.querySelector("#btn-volver-inicio").addEventListener("click", () => switchView("home"));
+    container.querySelector("#btn-volver-inicio").addEventListener("click", () =>
+      switchView("home", {}, { replace: true })
+    );
   }
 }
 
