@@ -134,7 +134,7 @@ export function render(container) {
           <span class="stat-amount stat-ok">${alCorrienteCount}</span>
         </button>
         <button type="button" class="stat-card" id="stat-extra">
-          <span class="stat-label">De más</span>
+          <span class="stat-label">Aportaron de más</span>
           <span class="stat-amount stat-extra">${extraCount}</span>
         </button>
       `;

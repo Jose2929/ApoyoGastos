@@ -58,14 +58,20 @@ export function render(container, { tipo }) {
           : ""
       }
 
-      <label class="field-label">Foto del comprobante (opcional)</label>
-      <input class="visually-hidden" id="foto" type="file" accept="image/*" capture="environment" />
-      <button type="button" class="btn btn-secondary" id="btn-subir-foto">📷 Subir foto</button>
-      <div class="foto-preview" id="foto-preview" hidden>
-        <img id="foto-preview-img" alt="Comprobante" />
-        <button type="button" class="btn btn-small btn-danger" id="btn-eliminar-foto">Eliminar foto</button>
-      </div>
-      <p class="foto-status" id="foto-status"></p>
+      ${
+        !isDeposito
+          ? `
+        <label class="field-label">Foto del comprobante (opcional)</label>
+        <input class="visually-hidden" id="foto" type="file" accept="image/*" capture="environment" />
+        <button type="button" class="btn btn-secondary" id="btn-subir-foto">📷 Subir foto</button>
+        <div class="foto-preview" id="foto-preview" hidden>
+          <img id="foto-preview-img" alt="Comprobante" />
+          <button type="button" class="btn btn-small btn-danger" id="btn-eliminar-foto">Eliminar foto</button>
+        </div>
+        <p class="foto-status" id="foto-status"></p>
+      `
+          : ""
+      }
 
       <p class="form-error" id="form-error" hidden></p>
       <button class="btn btn-big btn-deposit" id="btn-guardar">Guardar</button>
@@ -108,38 +114,40 @@ export function render(container, { tipo }) {
   }
 
   let comprobanteBase64 = null;
-  const fotoInput = container.querySelector("#foto");
-  const fotoStatus = container.querySelector("#foto-status");
-  const subirBtn = container.querySelector("#btn-subir-foto");
-  const previewWrap = container.querySelector("#foto-preview");
-  const previewImg = container.querySelector("#foto-preview-img");
-  const eliminarBtn = container.querySelector("#btn-eliminar-foto");
+  if (!isDeposito) {
+    const fotoInput = container.querySelector("#foto");
+    const fotoStatus = container.querySelector("#foto-status");
+    const subirBtn = container.querySelector("#btn-subir-foto");
+    const previewWrap = container.querySelector("#foto-preview");
+    const previewImg = container.querySelector("#foto-preview-img");
+    const eliminarBtn = container.querySelector("#btn-eliminar-foto");
 
-  subirBtn.addEventListener("click", () => fotoInput.click());
+    subirBtn.addEventListener("click", () => fotoInput.click());
 
-  fotoInput.addEventListener("change", async () => {
-    const file = fotoInput.files[0];
-    if (!file) return;
-    fotoStatus.textContent = "Comprimiendo foto...";
-    try {
-      comprobanteBase64 = await compressImageToBase64(file);
-      previewImg.src = comprobanteBase64;
-      previewWrap.hidden = false;
-      subirBtn.hidden = true;
-      fotoStatus.textContent = "";
-    } catch (e) {
+    fotoInput.addEventListener("change", async () => {
+      const file = fotoInput.files[0];
+      if (!file) return;
+      fotoStatus.textContent = "Comprimiendo foto...";
+      try {
+        comprobanteBase64 = await compressImageToBase64(file);
+        previewImg.src = comprobanteBase64;
+        previewWrap.hidden = false;
+        subirBtn.hidden = true;
+        fotoStatus.textContent = "";
+      } catch (e) {
+        comprobanteBase64 = null;
+        fotoStatus.textContent = "No se pudo procesar la foto, intenta con otra.";
+      }
+    });
+
+    eliminarBtn.addEventListener("click", () => {
       comprobanteBase64 = null;
-      fotoStatus.textContent = "No se pudo procesar la foto, intenta con otra.";
-    }
-  });
-
-  eliminarBtn.addEventListener("click", () => {
-    comprobanteBase64 = null;
-    fotoInput.value = "";
-    previewWrap.hidden = true;
-    subirBtn.hidden = false;
-    fotoStatus.textContent = "";
-  });
+      fotoInput.value = "";
+      previewWrap.hidden = true;
+      subirBtn.hidden = false;
+      fotoStatus.textContent = "";
+    });
+  }
 
   const errorEl = container.querySelector("#form-error");
   const guardarBtn = container.querySelector("#btn-guardar");
